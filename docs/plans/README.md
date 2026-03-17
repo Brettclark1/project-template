@@ -2,10 +2,12 @@
 
 Active plans live here. Completed plans go in `completed/`.
 
+## Creating a Plan
+Use the template at `docs/templates/plan-template.md`. Copy it, rename it, fill it in. The conductor reads these to generate sub-agent prompts, so the structured task format matters.
+
 ## Naming Convention
 ```
-YYYY-MM-DD-feature-name-design.md   (what we're building)
-YYYY-MM-DD-feature-name-plan.md     (how we'll implement it)
+YYYY-MM-DD-feature-name-plan.md
 ```
 
 ## Workflow
@@ -13,4 +15,4 @@ YYYY-MM-DD-feature-name-plan.md     (how we'll implement it)
 2. Conductor terminal reads the plan and generates sub-agent prompts
 3. Sub-agents execute chunks of the plan
 4. After each chunk: build → review → commit → update docs
-5. When fully complete, move both files to `completed/`
+5. When fully complete, move the plan to `completed/`

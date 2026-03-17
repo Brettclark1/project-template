@@ -15,6 +15,12 @@ build/
 .env.local
 .env.*.local
 
+# Cloudflare
+.wrangler/
+
+# Claude Code
+.claude/settings.json
+
 # IDE
 .vscode/
 .idea/

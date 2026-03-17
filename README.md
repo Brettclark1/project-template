@@ -4,7 +4,7 @@ This is the standard project scaffold for Everyday Workflow LLC projects. Clone 
 
 ## Quick Start
 
-```bash
+```
 # Clone the template
 git clone <this-repo-url> my-new-project
 cd my-new-project
@@ -27,35 +27,48 @@ cp .env.example .env
 ## What's Included
 
 ### Docs Structure (`docs/`)
+
 ```
 docs/
-├── plans/              # Active implementation plans
-│   ├── completed/      # Move plans here when done
-│   └── README.md       # Explains the plan workflow
 ├── features/           # 30,000-foot product capabilities
 │   ├── overview.md     # What the product does
 │   └── CHANGELOG.md    # High-level change log
-└── tech/               # Technical reference
-    ├── architecture.md # System design
-    └── adrs/           # Architectural Decision Records
-        └── ADR-000-template.md
+├── handoffs/           # Session transfer documents
+├── plans/              # Active implementation plans
+│   ├── completed/      # Move plans here when done
+│   └── README.md       # Explains the plan workflow
+├── tech/               # Technical reference
+│   ├── architecture.md # System design
+│   └── adrs/           # Architectural Decision Records
+│       └── ADR-000-template.md
+└── templates/          # Prompt and plan templates
+    ├── plan-template.md        # Structured format for implementation plans
+    ├── prompt-architecture.md  # Architecture design prompt
+    ├── prompt-brand.md         # Brand identity guide prompt
+    ├── prompt-mvp-brainstorm.md # MVP scoping prompt
+    └── prompt-prd.md           # Product requirements prompt
 ```
 
 ### Skills (`.claude/skills/`)
+
 | Skill | When to Use |
-|-------|-------------|
+|---|---|
 | `conductor` | Start of build phase — plan tracking and sub-agent prompt generation |
 | `code-review` | After every sub-agent task, before committing |
+| `security-review` | Before deployment — credential exposure, third-party code, API security |
 | `update-docs` | After commit — keep docs current |
 | `feature-impact` | Before building any new feature — catch edge cases early |
+| `debug` | When something's broken — structured diagnosis before code changes |
+| `handoff` | End of session — capture state for the next session to pick up cleanly |
 | `brand-checker` | Before finishing any UI work — visual consistency |
 
 ### Root Files
+
 | File | Purpose |
-|------|---------|
+|---|---|
 | `CLAUDE.md` | Project-specific rules for Claude Code (customize per project) |
-| `.gitignore` | Standard ignores for Node/TypeScript projects |
-| `.env.example` | Safe template for secrets |
+| `.gitignore` | Standard ignores for Node/TypeScript/Cloudflare projects |
+| `.env.example` | Safe template for secrets — list every key with empty values |
 
 ## Planning Phase Workflow (from your colleague's guide)
 
@@ -63,7 +76,7 @@ docs/
 2. **Visual prototype** — Lovable or similar, validate the concept
 3. **Brand guide** — Extract brand identity into `brand.md`
 4. **Architecture** — Generate `docs/tech/architecture.md`
-5. **Implementation plan** — Brainstorm MVP scope, create plan in `docs/plans/`
+5. **Implementation plan** — Use `docs/templates/plan-template.md`, create plan in `docs/plans/`
 6. **Run /init** — Let Claude Code scan the project, then trim the CLAUDE.md
 
 ## Build Phase Workflow
@@ -71,18 +84,19 @@ docs/
 1. **Open conductor terminal** — Use the conductor skill prompt
 2. **Conductor generates sub-agent prompt** — Review it, add context if needed
 3. **/clear a terminal, paste the prompt** — Watch the sub-agent build
-4. **Sub-agent finishes** → Code review → Commit → Update docs
+4. **Sub-agent finishes → Code review → Security review (if applicable) → Commit → Update docs**
 5. **Report back to conductor** — What was done, what deviated, what came up
 6. **Conductor generates next prompt** — Repeat
+7. **End of session → Write handoff** — Use the handoff skill
 
 ## CLAUDE.md Maintenance Rules
 
 After running /init, hand-edit your CLAUDE.md:
-- **Cut** anything the AI can discover from code (directory structure, frameworks, dependency lists)
-- **Keep** undiscoverable stuff (why decisions were made, which pattern is canonical, project-specific conventions)
-- **Use it as an index** — point to deeper docs rather than inlining
-- **Move enforceable rules to automation** — linting/formatting go in pre-commit hooks, not prose
-- **Review regularly** — the AI will add things over time, trim the fat
+* Cut anything the AI can discover from code (directory structure, frameworks, dependency lists)
+* Keep undiscoverable stuff (why decisions were made, which pattern is canonical, project-specific conventions)
+* Use it as an index — point to deeper docs rather than inlining
+* Move enforceable rules to automation — linting/formatting go in pre-commit hooks, not prose
+* Review regularly — the AI will add things over time, trim the fat
 
 ## Global Settings
 
@@ -91,7 +105,9 @@ Your universal preferences live in `~/.claude/CLAUDE.md` (separate file, not in 
 ## Obsidian Tip
 
 Symlink `docs/features/` to a folder in your Obsidian vault:
-```bash
+
+```
 ln -s /path/to/obsidian/vault/my-project/project-context docs/features
 ```
+
 Claude Code reads/writes them as project files. You read/edit them in Obsidian with full markdown rendering.

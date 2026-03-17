@@ -31,11 +31,26 @@ Here is the plan:
 6. Conductor updates tracking and generates the next prompt
 7. Repeat
 
+## Sub-Agent Prompt Structure
+
+Every sub-agent prompt the conductor generates must include these sections in this order:
+
+1. **Context** — What this project is, what phase we're in, what the active plan is
+2. **What's been built so far** — Which previous tasks are complete. What interfaces, files, or patterns the sub-agent needs to connect to
+3. **This task** — What to build. Be specific: which files to create or modify, what the output should look like, what "done" means
+4. **What NOT to touch** — Files, systems, or patterns that are off-limits for this task
+5. **Constraints** — Security rules, naming conventions, patterns to follow, dependencies to respect
+6. **Verification** — How the sub-agent confirms the task is complete before handing back. What to test, what to check, what output to show
+7. **When you're done** — Remind the sub-agent to run code review, commit, and update docs before reporting back
+
+The conductor should never generate a prompt that says "build the thing" without specifying what files it touches, what it connects to, and how to verify it works.
+
 ## Rules for the Conductor
 - Never write code — only track plans and generate prompts
 - Include in each sub-agent prompt: what was built in previous steps, what interfaces to connect to, what to watch for
 - Keep your context clean — no code diffs, no implementation details
 - If a sub-agent discovers something that changes the plan, update the plan before generating the next prompt
+- If a task depends on an ASSUMED integration (API, service, config), flag it in the prompt so the sub-agent verifies before building against it
 
 ## When Context Runs Low
 If the conductor's context is filling up, have it write a hand-off prompt:
