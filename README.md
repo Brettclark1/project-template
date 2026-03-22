@@ -39,6 +39,7 @@ docs/
 │   └── README.md       # Explains the plan workflow
 ├── tech/               # Technical reference
 │   ├── architecture.md # System design
+│   ├── deployment.md   # Deploy target, env vars, verification
 │   └── adrs/           # Architectural Decision Records
 │       └── ADR-000-template.md
 └── templates/          # Prompt and plan templates
@@ -81,10 +82,11 @@ docs/
 
 ## Build Phase Workflow
 
+0. **Deploy hello world first** — Get the full lifecycle working before writing feature code. Fill in `docs/tech/deployment.md`
 1. **Open conductor terminal** — Use the conductor skill prompt
 2. **Conductor generates sub-agent prompt** — Review it, add context if needed
 3. **/clear a terminal, paste the prompt** — Watch the sub-agent build
-4. **Sub-agent finishes → Code review → Security review (if applicable) → Commit → Update docs**
+4. **Sub-agent finishes → You test manually → Code review → Security review (if applicable) → Commit → Update docs**
 5. **Report back to conductor** — What was done, what deviated, what came up
 6. **Conductor generates next prompt** — Repeat
 7. **End of session → Write handoff** — Use the handoff skill
@@ -97,6 +99,10 @@ After running /init, hand-edit your CLAUDE.md:
 * Use it as an index — point to deeper docs rather than inlining
 * Move enforceable rules to automation — linting/formatting go in pre-commit hooks, not prose
 * Review regularly — the AI will add things over time, trim the fat
+
+## Branching
+
+Default: work directly on main. The conductor/sub-agent cycle with frequent commits gives you enough save points for day-to-day work. Only reach for `git branch` or `git worktree` when you're doing exploratory work you might throw away, touching risky systems (auth, database migrations, core architecture), or running a big refactor that will leave the project broken for a while.
 
 ## Global Settings
 
