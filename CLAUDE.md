@@ -43,3 +43,6 @@ See `docs/plans/` for active implementation plans.
 <!-- - Don't modify the scoring algorithm without discussing first -->
 <!-- - Don't add new dependencies without approval -->
 <!-- - Don't change the database schema without an ADR -->
+
+## gstack
+Available skills: /office-hours, /plan-ceo-review, /plan-eng-review, /plan-design-review, /design-consultation, /design-shotgun, /design-html, /review, /ship, /land-and-deploy, /canary, /benchmark, /browse, /connect-chrome, /qa, /qa-only, /design-review, /setup-browser-cookies, /setup-deploy, /retro, /investigate, /document-release, /codex, /cso, /autoplan, /careful, /freeze, /guard, /unfreeze, /gstack-upgrade, /learn.
