@@ -1,0 +1,289 @@
+# =============================================================================
+# living-systems.yml — Ryven Living Systems Layer Enforcement Configuration
+# =============================================================================
+# This file is the single source of truth for runtime enforcement.
+# It is committed to the repo, version-controlled, and changes require
+# operator review via PR. Missing or malformed config is a fatal startup error.
+#
+# Reference: Living Systems Layer PRD v3.0, Section 6
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# TIER DECLARATION
+# -----------------------------------------------------------------------------
+# Set once at project kickoff. Determines which enforcement controls are
+# required vs optional. See PRD Tier Selection Framework.
+#
+# Values: micro | standard | full
+tier: standard
+
+# -----------------------------------------------------------------------------
+# AGENTS
+# -----------------------------------------------------------------------------
+# Every agent in the Living Systems Layer is declared here with its name,
+# permission level, and assigned drift surfaces.
+#
+# Permission Levels:
+#   0 = read-only       — read stores, read logs, emit metrics
+#   1 = quarantine-write — write to quarantine buffer only
+#   2 = production-write — write to verified production stores (gated)
+#   3 = self-correct     — modify system behavior within correction scope
+#   4 = operator-escalate — trigger notifications, halt processes, circuit breakers
+#
+# Rule: Permission levels are declared here, not in agent prompts.
+#       An agent cannot self-elevate. Elevation requires config change
+#       by the operator and redeployment.
+agents:
+
+  # -- Tier 1 (Micro) agents — required on every build --
+
+  health-check:
+    permission_level: 0
+    description: "Scheduled ping confirming system is alive"
+    trigger: cron
+    schedule: "*/5 * * * *"       # every 5 minutes — adjust per project
+    drift_surfaces: []             # not tied to a specific drift surface
+
+  dependency-watcher:
+    permission_level: 0
+    description: "Flags dependency version changes and deprecations"
+    trigger: cron
+    schedule: "0 6 * * 1"         # weekly Monday 6am — adjust per project
+    drift_surfaces: []
+    source_whitelist:
+      - "https://registry.npmjs.org"
+      - "https://pypi.org"
+      # Add project-specific registries
+
+  log-writer:
+    permission_level: 0
+    description: "Immutable append-only audit log"
+    trigger: event
+    drift_surfaces: []
+
+  # -- Tier 2 (Standard) agents — add as needed per drift surface inventory --
+
+  # Example: uncomment and customize for your project
+  #
+  # api-contract-auditor:
+  #   permission_level: 0
+  #   description: "Monitors external API contracts for breaking changes"
+  #   trigger: cron
+  #   schedule: "0 7 * * *"
+  #   drift_surfaces:
+  #     - "stripe-api-v2024"
+  #     - "twilio-messaging-api"
+  #   source_whitelist:
+  #     - "https://stripe.com/docs/upgrades"
+  #     - "https://www.twilio.com/docs/usage/api"
+
+  # compliance-watcher:
+  #   permission_level: 0
+  #   description: "Monitors regulatory and compliance rule changes"
+  #   trigger: cron
+  #   schedule: "0 8 * * 1"
+  #   drift_surfaces:
+  #     - "a2p-10dlc-requirements"
+  #   source_whitelist:
+  #     - "https://www.fcc.gov"
+
+  # verification-agent:
+  #   permission_level: 2
+  #   description: "Reviews quarantine content before production write"
+  #   trigger: event
+  #   drift_surfaces: []
+
+  # security-audit:
+  #   permission_level: 4
+  #   description: "Autonomous security posture audit"
+  #   trigger: cron
+  #   schedule: "0 3 * * 0"       # weekly Sunday 3am
+  #   drift_surfaces: []
+  #   source_whitelist:
+  #     - "https://nvd.nist.gov"
+  #     - "https://github.com/advisories"
+
+# -----------------------------------------------------------------------------
+# RULES
+# -----------------------------------------------------------------------------
+# Allow, deny, and ask rules evaluated by the hook middleware chain.
+# Each rule matches on agent pattern (glob), action pattern (glob),
+# and optional input pattern (regex).
+#
+# Evaluation order (Section 6.3):
+#   1. Permission level check (automatic, not configurable)
+#   2. Deny rules (first match wins, cannot be overridden)
+#   3. Ask rules (suspend for operator approval)
+#   4. Allow rules (bypass further checks)
+#   5. Custom hooks
+#   6. Default: ALLOW if permission level sufficient
+#
+# Rule: Deny rules are always evaluated first. Explicit denials
+#       cannot be overridden by allow rules.
+rules:
+
+  deny:
+    # No agent ever writes directly to production stores
+    - agent: "*"
+      action: "write:production:*"
+      reason: "Direct production writes are prohibited. Use quarantine buffer."
+
+    # No agent touches auth configuration
+    - agent: "*"
+      action: "modify:auth:*"
+      reason: "Auth configuration changes require operator action."
+
+    # No agent modifies its own enforcement config
+    - agent: "*"
+      action: "write:config:living-systems.yml"
+      reason: "Enforcement config is immutable at runtime."
+
+    # No agent accesses credentials directly
+    - agent: "*"
+      action: "read:secrets:*"
+      reason: "Agents reference secret identifiers only. Direct credential access is prohibited."
+
+  ask:
+    # Self-correction actions require operator approval (Tier 2)
+    # Remove this rule at Tier 3 if annealing logic is fully tested
+    - agent: "*"
+      action: "self-correct:*"
+      reason: "Self-correction requires operator approval at this tier."
+
+    # Any agent attempting to write to a store outside its assigned targets
+    - agent: "*"
+      action: "write:*"
+      input_pattern: "(?!quarantine)"   # anything not quarantine
+      reason: "Write target is outside agent's assigned stores."
+
+  allow:
+    # Health check and dependency watcher are always allowed to read
+    - agent: "health-check"
+      action: "read:*"
+
+    - agent: "dependency-watcher"
+      action: "read:*"
+
+    # Log writer is always allowed to append
+    - agent: "log-writer"
+      action: "append:audit-log:*"
+
+# -----------------------------------------------------------------------------
+# HOOKS
+# -----------------------------------------------------------------------------
+# Custom hook registrations. Hooks run as external processes that receive
+# action context on stdin (JSON) and return a decision on stdout (JSON).
+#
+# Required response format:
+#   { "decision": "ALLOW" | "DENY" | "ASK" | "REWRITE",
+#     "reason": "string",
+#     "rewritten_input": { ... }  // only if REWRITE
+#   }
+#
+# Tier restrictions:
+#   - Tier 1: Custom hooks not permitted
+#   - Tier 2: Custom hooks optional, REWRITE not permitted
+#   - Tier 3: Custom hooks required, REWRITE optional
+hooks:
+
+  pre_tool_use: []
+    # Example custom hook (Tier 2+):
+    #
+    # - name: "content-sanitizer"
+    #   command: "node agents/hooks/sanitize-input.js"
+    #   timeout_ms: 5000
+    #   abort_on_failure: true
+    #   events: ["PreToolUse"]
+
+    # Example REWRITE hook (Tier 3 only):
+    #
+    # - name: "input-enricher"
+    #   command: "node agents/hooks/enrich-input.js"
+    #   timeout_ms: 10000
+    #   abort_on_failure: true
+    #   events: ["PreToolUse"]
+    #   capabilities: ["REWRITE"]
+
+  post_tool_use: []
+    # Example audit hook:
+    #
+    # - name: "execution-auditor"
+    #   command: "node agents/hooks/audit-execution.js"
+    #   timeout_ms: 3000
+    #   abort_on_failure: false
+    #   events: ["PostToolUse", "PostToolUseFailure"]
+
+# -----------------------------------------------------------------------------
+# CIRCUIT BREAKERS
+# -----------------------------------------------------------------------------
+# Threshold definitions for automatic system halt.
+# When triggered, all agent activity stops until operator manually resets.
+circuit_breakers:
+
+  global:
+    # Halt all agents if flagged content exceeds threshold in window
+    flagged_content_threshold: 5
+    window_minutes: 60
+    action: halt_all
+    notify:
+      - operator                   # route defined in Section 9
+
+  # Per-agent circuit breakers (override global for specific agents)
+  # Example:
+  #
+  # api-contract-auditor:
+  #   failure_threshold: 3
+  #   window_minutes: 30
+  #   action: halt_agent
+  #   notify:
+  #     - operator
+
+# -----------------------------------------------------------------------------
+# KNOWLEDGE STORES
+# -----------------------------------------------------------------------------
+# Declares which stores exist and which agents have read/write access.
+# Cross-referenced with agent permission levels above.
+knowledge_stores:
+
+  quarantine:
+    type: d1
+    table: "quarantine_buffer"
+    write_access:
+      - "verification-agent"       # only verified writers
+    read_access:
+      - "verification-agent"
+      - "security-audit"
+
+  # production:
+  #   type: d1
+  #   table: "knowledge_store"
+  #   write_access:
+  #     - "write-gate-agent"       # only the write gate
+  #   read_access:
+  #     - "*"                      # all agents can read production state
+
+  audit_log:
+    type: r2
+    bucket: "audit-logs"
+    write_access:
+      - "log-writer"               # append-only, single writer
+    read_access:
+      - "security-audit"
+      - "operator"
+    immutable: true                 # no update or delete operations permitted
+
+# -----------------------------------------------------------------------------
+# LOGGING
+# -----------------------------------------------------------------------------
+# All hook decisions, permission checks, and agent actions are logged here.
+logging:
+  destination: r2
+  bucket: "living-systems-logs"
+  format: jsonl
+  retention_days: 90               # adjust per project/compliance requirements
+  log_events:
+    - permission_check
+    - hook_decision
+    - agent_action
+    - circuit_breaker_event
+    - operator_override

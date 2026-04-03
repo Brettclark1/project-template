@@ -44,5 +44,8 @@ See `docs/plans/` for active implementation plans.
 <!-- - Don't add new dependencies without approval -->
 <!-- - Don't change the database schema without an ADR -->
 
+## Living Systems Layer (Build Gate)
+Every build must include a Living Systems Layer. If a PRD or Architecture doc does not contain a Living Systems Layer section, the spec is incomplete. Do not proceed to scaffold. Reference: `doctrine/living-systems-layer-prd-v3.md`
+
 ## gstack
 Available skills: /office-hours, /plan-ceo-review, /plan-eng-review, /plan-design-review, /design-consultation, /design-shotgun, /design-html, /review, /ship, /land-and-deploy, /canary, /benchmark, /browse, /connect-chrome, /qa, /qa-only, /design-review, /setup-browser-cookies, /setup-deploy, /retro, /investigate, /document-release, /codex, /cso, /autoplan, /careful, /freeze, /guard, /unfreeze, /gstack-upgrade, /learn.
