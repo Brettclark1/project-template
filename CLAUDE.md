@@ -1,5 +1,8 @@
 # CLAUDE.md — [PROJECT NAME]
 
+## New Project Setup
+After cloning a repo from this template, run `scripts/setup-context.sh` to symlink `docs/project-context` to the matching `~/Dev/ryven-brain/projects/{project-name}/docs` vault folder.
+
 ## Project Overview
 <!-- One sentence: what this project does and who it's for -->
 
