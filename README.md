@@ -63,6 +63,29 @@ docs/
 | `handoff` | End of session — capture state for the next session to pick up cleanly |
 | `brand-checker` | Before finishing any UI work — visual consistency |
 
+### Git Hooks (`.githooks/`)
+
+| Hook | What It Does |
+|---|---|
+| `pre-commit` | **Scope boundary enforcement.** If a `SCOPE` file exists, blocks commits touching files outside listed directories. Opt-in — no `SCOPE` file means no enforcement. |
+
+**Setup:** After cloning, point git at the hooks directory:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+**SCOPE file format** (create in repo root when you want to lock edits to specific directories):
+
+```
+# One directory per line, relative to repo root
+src/agents/
+config/
+docs/plans/
+```
+
+When you're done with the focused session, delete the SCOPE file to remove the boundary. The SCOPE file is gitignored — it's session-specific and never committed.
+
 ### Root Files
 
 | File | Purpose |
@@ -70,6 +93,7 @@ docs/
 | `CLAUDE.md` | Project-specific rules for Claude Code (customize per project) |
 | `.gitignore` | Standard ignores for Node/TypeScript/Cloudflare projects |
 | `.env.example` | Safe template for secrets — list every key with empty values |
+| `SCOPE` | (optional, gitignored) Session-specific directory allowlist for pre-commit scope enforcement |
 
 ## Planning Phase Workflow (from your colleague's guide)
 

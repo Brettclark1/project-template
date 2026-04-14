@@ -1,3 +1,8 @@
+---
+name: handoff
+description: Write a session handoff document in docs/handoffs/ capturing what was accomplished, current state, what comes next, gotchas, and key files to read. Lets the next session pick up cleanly without re-reading the entire codebase. Use when ending a session that will continue later.
+---
+
 # Skill: Session Handoff
 
 ## When to Use

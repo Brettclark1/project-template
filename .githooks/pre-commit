@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook: File Scope Boundary Enforcement
+#
+# If a SCOPE file exists in the repo root, only files within the listed
+# directories are allowed to be committed. Files outside scope are blocked
+# with a clear error. If no SCOPE file exists, the hook passes silently.
+#
+# SCOPE file format (one directory per line, relative to repo root):
+#   src/agents/
+#   config/
+#   docs/plans/
+#
+# Blank lines and lines starting with # are ignored.
+
+set -euo pipefail
+
+SCOPE_FILE="$(git rev-parse --show-toplevel)/SCOPE"
+
+# No SCOPE file = opt-out, pass silently
+if [[ ! -f "$SCOPE_FILE" ]]; then
+    exit 0
+fi
+
+# Read allowed directories, strip comments and blank lines
+allowed_dirs=()
+while IFS= read -r line; do
+    # Skip blank lines and comments
+    line=$(echo "$line" | sed 's/#.*//' | xargs)
+    [[ -z "$line" ]] && continue
+    # Normalize: ensure trailing slash
+    [[ "$line" != */ ]] && line="${line}/"
+    allowed_dirs+=("$line")
+done < "$SCOPE_FILE"
+
+# If SCOPE file exists but is empty (or all comments), pass silently
+if [[ ${#allowed_dirs[@]} -eq 0 ]]; then
+    exit 0
+fi
+
+# Check every staged file against allowed directories
+blocked_files=()
+while IFS= read -r staged_file; do
+    in_scope=false
+    for dir in "${allowed_dirs[@]}"; do
+        if [[ "$staged_file" == "$dir"* ]]; then
+            in_scope=true
+            break
+        fi
+    done
+    if ! $in_scope; then
+        blocked_files+=("$staged_file")
+    fi
+done < <(git diff --cached --name-only --diff-filter=ACMR)
+
+# All clear
+if [[ ${#blocked_files[@]} -eq 0 ]]; then
+    exit 0
+fi
+
+# Block the commit
+echo ""
+echo "  SCOPE BOUNDARY VIOLATION — commit blocked"
+echo "  ==========================================="
+echo ""
+echo "  The following staged files are outside the allowed scope:"
+echo ""
+for f in "${blocked_files[@]}"; do
+    echo "    - $f"
+done
+echo ""
+echo "  Allowed directories (from SCOPE file):"
+echo ""
+for d in "${allowed_dirs[@]}"; do
+    echo "    - $d"
+done
+echo ""
+echo "  Are you in the right worktree? If this file should be"
+echo "  committed, either:"
+echo "    1. Add its directory to the SCOPE file"
+echo "    2. Remove the SCOPE file to disable scope enforcement"
+echo "    3. Switch to the correct worktree for this change"
+echo ""
+exit 1

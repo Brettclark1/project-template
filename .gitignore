@@ -42,3 +42,9 @@ coverage/
 *.tgz
 .cache/
 docs/project-context
+
+# Evaluation reports — local-only, not tracked
+docs/evaluations/
+
+# Scope boundary file — session-specific, never committed
+SCOPE

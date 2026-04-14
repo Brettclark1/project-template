@@ -1,3 +1,8 @@
+---
+name: feature-impact
+description: Assess the blast radius of a proposed change before implementation — what existing features does it touch, what shared data does it affect, what edge cases does it create, what integrations does it depend on. Produces an impact report with risks and mitigation recommendations. Use before building any new feature.
+---
+
 # Skill: Feature Impact Analysis
 
 ## When to Use

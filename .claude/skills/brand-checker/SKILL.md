@@ -1,3 +1,8 @@
+---
+name: brand-checker
+description: Verify UI changes and copy against Ryven brand voice, tone, and visual guidelines (colors, typography, spacing, components) defined in the project's brand.md. Use before finishing any UI work or front-end feature.
+---
+
 # Skill: Brand Checker
 
 ## When to Use

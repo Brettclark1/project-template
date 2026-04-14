@@ -1,3 +1,8 @@
+---
+name: update-docs
+description: Update project documentation after a commit — README, CHANGELOG, feature docs, architecture doc, ADRs, CLAUDE.md, and plan tracking. Describes what was just built, not what's planned. Use after code review passes and the commit is done.
+---
+
 # Skill: Update Docs
 
 ## When to Use

@@ -1,3 +1,8 @@
+---
+name: debug
+description: Systematic debugging protocol — reproduce, isolate, read before writing, one hypothesis at a time, verify the fix. Stops shotgun-guessing and forces structured diagnosis before any code changes. This is the project-template's lightweight debug skill, not the gstack investigate skill.
+---
+
 # Skill: Debug
 
 ## When to Use

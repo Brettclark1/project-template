@@ -1,0 +1,95 @@
+# docs/eval-criteria.yml
+# Evaluator Agent — Project Criteria Config
+# Used by the conductor to grade sub-agent output before proceeding.
+# Customize weights and fail_signals per project. Criteria are config, not code.
+#
+# CALIBRATION: The first 2-3 tasks on any new project should be treated as a
+# sanity check on this project's weights and fail_signals. Run the evaluator,
+# compare its scores against your own review, and adjust before trusting it.
+#
+# Reference: doctrine/evaluator-agent-architecture.md
+
+version: 1
+project: project-name  # replace with your project identifier
+
+# Global pass threshold (0-10 scale, weighted average must clear this)
+pass_threshold: 7
+
+# Criteria definitions
+# Weights must sum to 1.0. Each criterion scored 0-10 by the evaluator.
+criteria:
+
+  spec_adherence:
+    weight: 0.25
+    description: "Output matches the task spec. All required deliverables present."
+    fail_signals:
+      - "Missing deliverables listed in task prompt"
+      - "Output contradicts explicit spec requirements"
+      - "Scope creep — work done that wasn't asked for"
+
+  code_quality:
+    weight: 0.20
+    description: "Clean, readable, follows project conventions."
+    fail_signals:
+      - "No error handling on external calls"
+      - "Hardcoded values that should be config"
+      - "Missing TypeScript types or any types"
+      - "Console.log left in production code"
+
+  security:
+    weight: 0.20
+    description: "No credentials exposed. Least privilege. Input validation."
+    fail_signals:
+      - "API keys or tokens in source files"
+      - "Missing input validation on user-facing endpoints"
+      - "Overly permissive CORS or permissions"
+      - "Dependencies not pinned to exact versions"
+
+  documentation:
+    weight: 0.15
+    description: "Changes documented. CLAUDE.md updated if affected."
+    fail_signals:
+      - "No commit message or vague commit message"
+      - "CLAUDE.md not updated when build conventions changed"
+      - "New config options undocumented"
+
+  testability:
+    weight: 0.10
+    description: "Output can be verified. Clear success criteria."
+    fail_signals:
+      - "No way to verify the change works without manual testing"
+      - "Edge cases mentioned but not handled"
+
+  separation_of_concerns:
+    weight: 0.10
+    description: "Components that fetch don't score. Config not code."
+    fail_signals:
+      - "Business logic mixed with data fetching"
+      - "Values that should be in config are hardcoded"
+      - "Single file doing too many things"
+
+# Task-type overrides
+# The conductor specifies task_type when calling the evaluator.
+# Overrides replace or add criteria for that task type only.
+overrides:
+
+  # For PRD/architecture tasks, swap code_quality for clarity
+  task_type_prd:
+    code_quality:
+      weight: 0.00
+    clarity:
+      weight: 0.20
+      description: "Clear, unambiguous language. No hand-waving."
+      fail_signals:
+        - "Vague requirements ('should be fast', 'handle errors')"
+        - "Missing acceptance criteria"
+        - "Undefined terms or acronyms"
+
+  # For documentation-only tasks, documentation weight increases
+  task_type_docs:
+    code_quality:
+      weight: 0.05
+    documentation:
+      weight: 0.30
+    testability:
+      weight: 0.05
