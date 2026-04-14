@@ -106,13 +106,13 @@ Together they close the "I think it works" / "I'll test it later" / "It worked l
 
 ## Flow Mode
 
-If the user says **"flow mode"**, **"keep going"**, or **"don't stop"**, proceed through tasks without asking for approval between each one. **Still** run `code-review`, `security-review`, and `verification-before-completion` on every task. **Still** commit per task. But do not stop to ask permission between tasks.
+If the user says **"flow mode"**, **"keep going"**, or **"don't stop"**, proceed through tasks without asking for approval between each one. **Still** run `code-review`, `security-review`, `legibility-pass`, and `verification-before-completion` on every task. **Still** commit per task. But do not stop to ask permission between tasks.
 
 The user will say **"slow down"** or **"stop"** when they want to resume one-at-a-time approval.
 
 **Flow mode does NOT turn off:**
 - Required Sub-Agent Skills above (TDD, systematic-debugging, verification-before-completion) — these are non-negotiable regardless of mode
-- `code-review` and `security-review` after each task
+- `code-review`, `security-review`, and `legibility-pass` after each task
 - Per-task commits (never batch commits across tasks)
 - The Circuit Breaker (two-strikes rule still applies)
 - Red Flags (drift, scope creep, unauthorized file modification still halt the flow)
@@ -123,7 +123,24 @@ The user will say **"slow down"** or **"stop"** when they want to resume one-at-
 - Status-check pauses
 - The conductor's default "should I proceed?" behavior after evaluator reports
 
-**How to recognize flow mode is active:** the user explicitly said one of the trigger phrases in a recent message. The conductor does NOT assume flow mode from context — it only enters flow mode on an explicit phrase, and exits as soon as the user says "slow down" or "stop" (or any task produces a critical finding from code-review / security-review / verification that the conductor judges warrants Brett's attention, regardless of mode).
+**How to recognize flow mode is active:** the user explicitly said one of the trigger phrases in a recent message. The conductor does NOT assume flow mode from context — it only enters flow mode on an explicit phrase, and exits as soon as the user says "slow down" or "stop" (or any task produces a critical finding from code-review / security-review / legibility-pass / verification that the conductor judges warrants Brett's attention, regardless of mode).
+
+## Mandatory Certification Gate — `legibility-pass`
+
+After `security-review` passes and before `commit`, the conductor MUST run `legibility-pass` on every build task. This is a **pipeline gate**, not an optional step. The conductor cannot mark a build complete without it.
+
+**Rule:** The building sub-agent (not a fresh one) produces a comprehension artifact while its context is still fully loaded, saved to `docs/comprehension/{module-name}.md` with `TYPE: GENERATED-AT-BUILD`. The artifact contains the plain-English summary, what the module touches, what it deliberately does not touch, load-bearing assumptions, rejected alternatives, agent flags, and the comprehension gate verdict.
+
+**Why:** Dark code is AI-generated code that passes tests but nobody can explain. Ryven ships a Build Certification Package proving every module's reasoning was captured at build time, not reconstructed under audit pressure later. `legibility-pass` is the keystone skill that produces that evidence. A timestamped artifact written by the agent that did the work is liability-grade proof; a reconstruction from git history is not.
+
+**How the conductor enforces it:**
+- Sub-agent prompt's "When you're done" section names `legibility-pass` as mandatory, to run after `security-review` and before `commit`
+- Sub-agent's "done" report must include the artifact path and the COMPREHENSION GATE verdict (`yes` / `no` / `needs-review`)
+- If the COMPREHENSION GATE is `no` or `needs-review`, the conductor flags the module for founder review before proceeding to the next task
+- If the sub-agent reports done without the artifact path, the conductor rejects the report and sends it back to generate the artifact before context is cleared
+- The conductor NEVER runs `legibility-pass` from a fresh sub-agent terminal — that would produce a `RECONSTRUCTED` artifact (the job of `dark-audit`), not a `GENERATED-AT-BUILD` artifact
+
+**Full framework:** see `ryven-brain/doctrine/ryven-build-certification.md`. The other four certification skills (`dark-audit`, `semantic-rules`, `context-compiler`, `liability-review`) are not pipeline gates — they run on their own triggers (quarterly, per-new-rule, per-build-start, per-delivery).
 
 ## Rules for the Conductor
 - Never write code — only track plans and generate prompts
@@ -141,6 +158,7 @@ Watch the sub-agent while it works. Most of the time, let it run. But stop it im
 - **Writes implementation code before a failing test exists** — Violates `test-driven-development`. If the sub-agent is editing `src/` files before it has a test in `tests/` that fails against the current behavior, stop it. Send it back to write the test first.
 - **Jumps straight to a fix after a failure** — Violates `systematic-debugging`. If the sub-agent sees an error and immediately proposes a code change without first writing a diagnosis (what broke, where, why, and how you know), stop it. Root cause before fix, always.
 - **Claims completion without running verification** — Violates `verification-before-completion`. If the sub-agent reports "done" without showing fresh output from the verification command, stop accepting the report. Send it back to run verification and paste the real output.
+- **Commits without generating a comprehension artifact** — Violates the `legibility-pass` certification gate. If the sub-agent's "done" report does not include a `docs/comprehension/{module-name}.md` path with a COMPREHENSION GATE verdict, stop accepting the report. Send it back to produce the artifact before context is cleared — once the building agent's context is gone, the artifact can only be reconstructed by `dark-audit`, which is lower fidelity.
 - **Starts refactoring during a fix** — "Let me clean this up while I'm in here" during a debug session is how new bugs get born. One thing at a time.
 - **Modifies files it wasn't told to touch** — Especially config files, auth, or database schemas. If the task didn't list it, the sub-agent shouldn't be in it.
 - **Generates placeholder/mock data when real data is available** — If an MCP connection exists, the AI should use it instead of guessing schemas or fabricating test data.
@@ -350,7 +368,7 @@ This lets Brett compare the evaluator's judgment against his own review without 
   - `test-driven-development` — write the failing test first, always
   - `systematic-debugging` — root cause before fix, always
   - `verification-before-completion` — fresh verification output before any "done" claim, always
-- Each sub-agent task ends with: **failing test first** → build (minimal code to pass) → **systematic debugging if any failure** → **verification-before-completion run** → code review → security review → commit → update docs
+- Each sub-agent task ends with: **failing test first** → build (minimal code to pass) → **systematic debugging if any failure** → **verification-before-completion run** → code review → security review → **legibility-pass (certification gate)** → commit → update docs
 - Report results back to conductor honestly — include deviations and surprises, and include the literal output of the verification command
 - After sub-agent reports done, conductor always launches evaluator before moving to next task
 - In flow mode, the conductor proceeds to the next task automatically after the evaluator passes; in normal mode, the conductor waits for Brett's approval between tasks

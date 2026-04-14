@@ -64,6 +64,17 @@ If a `SCOPE` file exists in the repo root, only modify files within the director
 ## Living Systems Layer (Build Gate)
 Every build must include a Living Systems Layer. If a PRD or Architecture doc does not contain a Living Systems Layer section, the spec is incomplete. Do not proceed to scaffold. Reference: `doctrine/living-systems-layer-prd-v3.md`
 
+## Ryven Build Certification Framework
+Every project scaffolded from this template ships with a Build Certification Package. The framework is produced by five skills that run inside the conductor workflow:
+
+- `legibility-pass` — comprehension artifact at build time. **Mandatory pipeline gate** between `security-review` and `commit`. Saves to `docs/comprehension/`.
+- `dark-audit` — exposure map and reconstructed artifacts for any module without a build-time artifact. On demand and quarterly minimum. Saves to `docs/comprehension/DARK-AUDIT-{date}.md`.
+- `semantic-rules` — rules of engagement encoded with intent + boundary + failure mode. One rule per file in `docs/semantic-context/`.
+- `context-compiler` — assembles the full context package the sub-agent receives before writing code. Saves to `docs/context-packages/{build-id}.md`.
+- `liability-review` — founder attestation report before client delivery. Saves to `docs/liability-reviews/{client}-{date}.md`. Never auto-signs.
+
+The Build Certification doc paths under `docs/` (`comprehension/`, `semantic-context/`, `context-packages/`, `liability-reviews/`) are part of the scaffold. See the README in each directory and the full framework at `ryven-brain/doctrine/ryven-build-certification.md`.
+
 ## External Skill Dependencies
 This template depends on gstack-installed `code-review` and `security-review` skills — the conductor skill references them by name after every task. Install gstack before using this template.
 
