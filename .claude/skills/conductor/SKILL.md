@@ -396,3 +396,23 @@ NO  → skip semantic-rules
 
 
 Do not proceed to the first task until this checklist is displayed and Brett has read it.
+
+## Session Start Checklist (Conductor reads this at every /build)
+
+Before dispatching any task, the conductor MUST display this checklist to Brett:
+
+--- SESSION START ---
+1. Extending or modifying existing modules?
+   YES → run context-compiler first before any task is dispatched
+   NO  → skip context-compiler, proceed to first task
+
+2. Will this session produce a client deliverable?
+   YES → run liability-review before delivery
+   NO  → skip liability-review
+
+3. Any new constraints, integrations, or boundaries emerging this session?
+   YES → run semantic-rules after the task that introduced them
+   NO  → skip semantic-rules
+---
+
+Do not proceed to the first task until this checklist is displayed and Brett has read it.
