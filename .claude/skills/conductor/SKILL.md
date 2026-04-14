@@ -372,3 +372,27 @@ This lets Brett compare the evaluator's judgment against his own review without 
 - Report results back to conductor honestly — include deviations and surprises, and include the literal output of the verification command
 - After sub-agent reports done, conductor always launches evaluator before moving to next task
 - In flow mode, the conductor proceeds to the next task automatically after the evaluator passes; in normal mode, the conductor waits for Brett's approval between tasks
+
+## Session Start Checklist (Conductor reads this at every /build)
+
+Before dispatching any task, the conductor MUST display this checklist to Brett:
+cd ~/Dev/project-template && git add .claude/skills/conductor/SKILL.md && git commit -m "Add session start checklist to conductor — context-compiler, liability-review, semantic-rules triggers" && git push
+cat >> ~/Dev/project-template/.claude/skills/conductor/SKILL.md << 'EOF'
+
+## Session Start Checklist (Conductor reads this at every /build)
+
+Before dispatching any task, the conductor MUST display this checklist to Brett:--- SESSION START ---
+
+Extending or modifying existing modules?
+YES → run context-compiler first before any task is dispatched
+NO  → skip context-compiler, proceed to first task
+Will this session produce a client deliverable?
+YES → run liability-review before delivery (not at end of session — at delivery)
+NO  → skip liability-review
+Any new constraints, integrations, or boundaries emerging this session?
+YES → run semantic-rules after the task that introduced them
+NO  → skip semantic-rules
+
+
+
+Do not proceed to the first task until this checklist is displayed and Brett has read it.
