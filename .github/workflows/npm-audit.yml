@@ -12,12 +12,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Skip if no package.json (pre-scaffold commits)
+        id: check
+        run: |
+          if [ ! -f package.json ]; then
+            echo "No package.json, skipping audit"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/setup-node@v4
+        if: steps.check.outputs.skip != 'true'
         with:
           node-version: 20
 
-      - run: npm ci
+      - name: Install dependencies
+        if: steps.check.outputs.skip != 'true'
+        run: npm ci
 
       - name: Run npm audit
+        if: steps.check.outputs.skip != 'true'
         run: npm audit --audit-level=moderate
         continue-on-error: true
