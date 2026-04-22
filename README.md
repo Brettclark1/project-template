@@ -91,9 +91,14 @@ When you're done with the focused session, delete the SCOPE file to remove the b
 | File | Purpose |
 |---|---|
 | `CLAUDE.md` | Project-specific rules for Claude Code (customize per project) |
+| `spec.md` | Living roadmap — overview, architecture, deployments, dependencies, installed skills, certification status, change log |
 | `.gitignore` | Standard ignores for Node/TypeScript/Cloudflare projects |
 | `.env.example` | Safe template for secrets — list every key with empty values |
 | `SCOPE` | (optional, gitignored) Session-specific directory allowlist for pre-commit scope enforcement |
+
+### Legacy projects (pre-2026-04-22)
+
+Projects scaffolded from this template **before 2026-04-22** do not have a `spec.md` and are deliberately not being retrofitted. New projects get the spec; old projects keep whatever docs they have. If a legacy project ever needs a spec later, copy `spec.md` from this template manually and backfill — don't treat retrofit as a required migration.
 
 ## Planning Phase Workflow (from your colleague's guide)
 

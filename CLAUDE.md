@@ -3,6 +3,19 @@
 ## New Project Setup
 After cloning a repo from this template, run `scripts/setup-context.sh` to symlink `docs/project-context` to the matching `~/Dev/ryven-brain/projects/{project-name}/docs` vault folder.
 
+## Living Project Spec — `spec.md`
+Every project scaffolded from this template ships with a `spec.md` at the repo root. Treat it as a living roadmap, not a one-time artifact. Update `spec.md` after any material change:
+
+- New component added to Architecture
+- New deployment target (Cloudflare Pages, Worker, domain, etc.)
+- New external dependency (API, SaaS, third-party service)
+- Certification status change (CERTIFIED / UNCERTIFIED / INTERNAL)
+- Major scope or ownership change
+
+When you update `spec.md`, bump `last_updated` in the frontmatter and add a dated entry to the Change Log section. This is part of the "document as you go" discipline — the same way `docs/tech/adrs/` captures architectural decisions and `docs/handoffs/` captures session state, `spec.md` captures the current shape of the project at a glance.
+
+If `spec.md` and the project disagree, `spec.md` is wrong. Fix it.
+
 ## Project Overview
 <!-- One sentence: what this project does and who it's for -->
 
